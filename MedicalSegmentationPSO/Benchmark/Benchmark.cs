@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using BenchmarkDotNet.Attributes;
 
-namespace MedicalSegmentationPSO
+namespace MedicalSegmentationPSO.Benchmark
 {
     public class PsoBenchmarks
     {
@@ -22,15 +22,15 @@ namespace MedicalSegmentationPSO
         public void SequentialPSO()
         {
             var pso = new PSO(pixels);
-            pso.Run(100);
+            var best = pso.Run(100);
         }
 
-        //[Benchmark]
-        //public void ParallelPSO()
-        //{
-        //    var pso = new ParallelPSO(pixels); // your future implementation
-        //    pso.Run(100);
-        //}
+        [Benchmark]
+        public void MultiCorePSO()
+        {
+            var pso = new MultiCorePSO(pixels);
+            pso.Run(100);
+        }
 
         //[Benchmark]
         //public void AdaptivePSO()
