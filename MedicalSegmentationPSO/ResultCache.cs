@@ -18,6 +18,7 @@ namespace MedicalSegmentationPSO
             {
                 WriteIndented = true
             }));
+        }
         
         public static PsoBenchmarkResult Load(string name)
         {
@@ -26,8 +27,7 @@ namespace MedicalSegmentationPSO
             if (!File.Exists(path))
                 return null;
 
-            return JsonSerializer.Deserialize<PsoBenchmarkResult>(
-                File.ReadAllText(path));
+            return JsonSerializer.Deserialize<PsoBenchmarkResult>(File.ReadAllText(path));
         }
     }
 }
