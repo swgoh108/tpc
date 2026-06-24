@@ -70,8 +70,7 @@ namespace MedicalSegmentationPSO
                     },
                     particle =>
                     {
-                        double fitness =
-                            CalculateFitness(particle.Position);
+                        double fitness = CalculateFitness(particle.Position);
 
                         if (fitness > particle.BestFitness)
                         {

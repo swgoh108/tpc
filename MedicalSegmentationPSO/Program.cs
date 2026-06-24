@@ -16,9 +16,58 @@ class Program
 
     static void Main()
     {
-        Console.WriteLine("=== PSO BENCHMARK SYSTEM ===");
-        BenchmarkPSORunner.Run();
+        //Console.WriteLine("=== PSO BENCHMARK SYSTEM ===");
+        //BenchmarkPSORunner.Run();
 
-        Console.WriteLine("DONE");
+        //Console.WriteLine("DONE");
+
+        //Console.WriteLine("================================");
+        //Console.WriteLine(" Brain Tumor Classification");
+        //Console.WriteLine("================================");
+
+        ////--------------------------------
+        //// TRAINING DATA
+        ////--------------------------------
+
+        var trainDataset =
+            DatasetLoaderTorch.Load(
+                @"C:\Users\user\SegmentedDataset\Training");
+
+        //--------------------------------
+        // TEST DATA
+        //--------------------------------
+
+        var testDataset =
+            DatasetLoaderTorch.Load(
+                @"C:\Users\user\SegmentedDataset\Testing");
+
+        foreach (var item in trainDataset.Take(1))
+        {
+            Console.WriteLine(item.Image.shape);
+        }
+
+        //--------------------------------
+        // TRAIN CNN
+        //--------------------------------
+
+        var cnn = new CNNClassifier();
+
+        cnn.Train(
+            trainDataset,
+            epochs: 10,
+            batchSize: 32);
+
+        cnn.Save("BrainTumorCNN.pt");
+
+        //--------------------------------
+        // EVALUATE
+        //--------------------------------
+
+        var results =
+            cnn.Evaluate(testDataset);
+
+        results.Print();
+
+        Console.WriteLine("\nDONE");
     }
 }

@@ -1,73 +1,150 @@
-﻿// DatasetLoaderTorch.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+
 using TorchSharp;
+
 using static TorchSharp.torch;
+
+using OpenCvSharp;
 
 namespace MedicalSegmentationPSO
 {
-    /// <summary>
-    /// Loads a folder-based image dataset into (Image, Label) tensor pairs.
-    ///
-    /// Expected folder structure (one sub-folder per class, matching TumorLabels.Classes):
-    ///   SegmentedDataset/
-    ///     glioma/        → label 0
-    ///     meningioma/    → label 1
-    ///     pituitary/     → label 2
-    ///     notumor/       → label 3
-    /// </summary>
     public class Batch
     {
         public Tensor Images { get; set; }
         public Tensor Labels { get; set; }
     }
+
     public static class DatasetLoaderTorch
     {
+        private const int ImageSize = 224;
+
         public static List<(Tensor Image, Tensor Label)> Load(string rootDir)
         {
-            var dataset = new List<(Tensor, Tensor)>();
+            var dataset =
+                new List<(Tensor Image, Tensor Label)>();
 
-            for (int classIdx = 0; classIdx < TumorLabels.Classes.Length; classIdx++)
+            Console.WriteLine(
+                $"Loading Dataset: {rootDir}");
+
+            for (int classIdx = 0;
+                 classIdx < TumorLabels.Classes.Length;
+                 classIdx++)
             {
-                string className = TumorLabels.Classes[classIdx];
-                string classDir = Path.Combine(rootDir, className);
+                string className =
+                    TumorLabels.Classes[classIdx];
+
+                string classDir =
+                    Path.Combine(
+                        rootDir,
+                        className);
 
                 if (!Directory.Exists(classDir))
-                    continue;
+                {
+                    Console.WriteLine(
+                        $"Missing Folder: {classDir}");
 
-                foreach (var file in Directory.GetFiles(classDir))
+                    continue;
+                }
+
+                int count = 0;
+
+                foreach (string file in Directory.GetFiles(
+                             classDir,
+                             "*.*",
+                             SearchOption.TopDirectoryOnly))
                 {
                     try
                     {
-                        using var mat = OpenCvSharp.Cv2.ImRead(file, OpenCvSharp.ImreadModes.Grayscale);
+                        using var mat =
+                            Cv2.ImRead(
+                                file,
+                                ImreadModes.Grayscale);
 
-                        if (mat.Empty()) continue;
+                        if (mat.Empty())
+                            continue;
 
-                        mat.ConvertTo(mat, OpenCvSharp.MatType.CV_32FC1, 1.0 / 255);
+                        using var resized =
+                            new Mat();
 
-                        // Convert directly → Tensor (SAFE)
-                        var tensor = torch.tensor(mat.Data)
-                            .reshape(mat.Rows, mat.Cols)
-                            .unsqueeze(0)   // C
-                            .unsqueeze(0);  // N
+                        Cv2.Resize(
+                            mat,
+                            resized,
+                            new OpenCvSharp.Size(
+                                ImageSize,
+                                ImageSize));
 
-                        var label = torch.tensor(new long[] { classIdx });
+                        byte[] pixels =
+                            new byte[
+                                ImageSize *
+                                ImageSize];
 
-                        dataset.Add((tensor, label));
+                        Marshal.Copy(
+                            resized.Data,
+                            pixels,
+                            0,
+                            pixels.Length);
+
+                        float[] data =
+                            new float[
+                                pixels.Length];
+
+                        for (int i = 0;
+                             i < pixels.Length;
+                             i++)
+                        {
+                            data[i] =
+                                pixels[i] / 255f;
+                        }
+
+                        Tensor image =
+                            torch.tensor(
+                                data,
+                                dtype:
+                                ScalarType.Float32)
+                            .reshape(
+                                1,
+                                ImageSize,
+                                ImageSize);
+
+                        Tensor label =
+                            torch.tensor(
+                                new long[]
+                                {
+                                    classIdx
+                                },
+                                dtype:
+                                ScalarType.Int64);
+
+                        dataset.Add(
+                            (image, label));
+
+                        count++;
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Skip {file}: {ex.Message}");
+                        Console.WriteLine(
+                            $"Skip: {file}");
+
+                        Console.WriteLine(
+                            ex.Message);
                     }
                 }
 
-                Console.WriteLine($"Loaded {className}");
+                Console.WriteLine(
+                    $"{className}: {count} images");
             }
+
+            Console.WriteLine(
+                $"Total Samples Loaded = {dataset.Count}");
 
             return dataset;
         }
     }
+
     public static class TorchDataLoader
     {
         public static IEnumerable<Batch> CreateBatches(
@@ -75,42 +152,49 @@ namespace MedicalSegmentationPSO
             int batchSize,
             bool shuffle = true)
         {
-            var rng = new Random();
-
             if (shuffle)
             {
-                dataset = dataset
-                    .OrderBy(_ => rng.Next())
+                var rng =
+                    new Random();
+
+                dataset =
+                    dataset
+                    .OrderBy(
+                        x => rng.Next())
                     .ToList();
             }
 
-            for (int i = 0; i < dataset.Count; i += batchSize)
+            for (int i = 0;
+                 i < dataset.Count;
+                 i += batchSize)
             {
-                var batchSamples = dataset
+                var batchSamples =
+                    dataset
                     .Skip(i)
                     .Take(batchSize)
                     .ToList();
 
-                var imageList = new List<Tensor>();
-                var labelList = new List<long>();
+                Tensor[] images =
+                    batchSamples
+                    .Select(x => x.Image)
+                    .ToArray();
 
-                foreach (var (img, lbl) in batchSamples)
-                {
-                    imageList.Add(img.squeeze(0));
-
-                    labelList.Add(lbl.item<long>());
-                }
-
-                Tensor images = torch.stack(imageList.ToArray());
-
-                Tensor labels = torch.tensor(
-                    labelList.ToArray(),
-                    dtype: ScalarType.Int64);
+                long[] labels =
+                    batchSamples
+                    .Select(
+                        x => x.Label.item<long>())
+                    .ToArray();
 
                 yield return new Batch
                 {
-                    Images = images,
-                    Labels = labels
+                    Images =
+                        torch.stack(images),
+
+                    Labels =
+                        torch.tensor(
+                            labels,
+                            dtype:
+                            ScalarType.Int64)
                 };
             }
         }
