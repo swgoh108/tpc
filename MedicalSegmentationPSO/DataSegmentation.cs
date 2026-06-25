@@ -73,10 +73,18 @@ namespace MedicalSegmentationPSO
                         // PSO Threshold Search
                         //----------------------------------
 
-                        double[] thresholds =
-                            PsoSegmentation.FindThresholds(
-                                pixels,
-                                psoIterations);
+                        //double[] thresholds =
+                        //    PsoSegmentation.FindThresholds(
+                        //        pixels,
+                        //        psoIterations);
+
+                        var pso = new SharedMemoryPSO(
+                            pixels,
+                            swarmSize: 30,
+                            maxThreads: 4);
+
+                        double[] thresholds = pso.Run(
+                            iterations: psoIterations);
 
                         //----------------------------------
                         // Apply Thresholds

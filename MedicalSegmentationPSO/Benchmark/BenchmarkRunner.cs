@@ -29,6 +29,7 @@ namespace MedicalSegmentationPSO
                     new MultiCorePSOAdapter(),
                     //new ParallelPSOAdapter(),
                     //new GPUPSOAdapter(),
+                    new SharedMemoryPSOAdapter(),
                 };
 
             BenchmarkResult baseline = null;
@@ -69,6 +70,35 @@ namespace MedicalSegmentationPSO
 
                 JsonResultWriter.Save(result);
             }
+
+            // Sequential PSO baseline (from previous benchmark)
+            //const double SequentialTotalTime = 3103790.6303;
+
+            //foreach (var algorithm in algorithms)
+            //{
+            //    Console.WriteLine(
+            //        $"\nRunning {algorithm.Name}...");
+
+            //    var result =
+            //        engine.RunOnDataset(
+            //            dataset,
+            //            algorithm);
+
+            //    result.Speedup =
+            //        SequentialTotalTime /
+            //        result.TotalTimeMs;
+
+            //    result.NumberOfCores =
+            //        Environment.ProcessorCount;
+
+            //    result.Efficiency =
+            //        result.Speedup /
+            //        result.NumberOfCores;
+
+            //    PrintResult(result);
+
+            //    JsonResultWriter.Save(result);
+            //}
         }
 
         private static void PrintResult(
