@@ -19,56 +19,109 @@ namespace MedicalSegmentationPSO
         // =========================
         public static void Process(string sourceRoot, string destRoot, int psoIterations = 50)
         {
-            Console.WriteLine($"  Source : {sourceRoot}");
-            Console.WriteLine($"  Dest   : {destRoot}");
-            Console.WriteLine($"  PSO iterations per image: {psoIterations}");
+            Console.WriteLine("Creating segmented dataset...");
 
-            string[] classDirs = Directory.GetDirectories(sourceRoot);
+            string[] classDirs =
+                Directory.GetDirectories(sourceRoot);
+
+            Random rng = new Random(42);
 
             foreach (string classDir in classDirs)
             {
-                string className = Path.GetFileName(classDir);
-                string destClass = Path.Combine(destRoot, className);
-                Directory.CreateDirectory(destClass);
+                string className =
+                    Path.GetFileName(classDir);
 
-                string[] files = Directory.GetFiles(classDir);
-                int saved = 0;
+                string[] files =
+                    Directory.GetFiles(
+                        classDir,
+                        "*.*",
+                        SearchOption.TopDirectoryOnly)
+                    .Where(f =>
+                        SupportedExtensions.Contains(
+                            Path.GetExtension(f).ToLower()))
+                    .OrderBy(x => rng.Next())
+                    .ToArray();
 
-                foreach (string file in files)
+                int trainCount =
+                    (int)(files.Length * 0.8);
+
+                Console.WriteLine(
+                    $"\n[{className}] Total = {files.Length}");
+
+                for (int i = 0; i < files.Length; i++)
                 {
-                    string ext = Path.GetExtension(file).ToLowerInvariant();
-                    if (Array.IndexOf(SupportedExtensions, ext) < 0) continue;
+                    bool isTrain =
+                        i < trainCount;
+
+                    string targetFolder =
+                        Path.Combine(
+                            destRoot,
+                            isTrain ? "Training" : "Testing",
+                            className);
+
+                    Directory.CreateDirectory(targetFolder);
 
                     try
                     {
-                        // Load as grayscale for PSO threshold optimisation
-                        byte[] pixels = ImageProcessor.LoadGrayscalePixels(
-                            file, out int w, out int h);
+                        byte[] pixels =
+                            ImageProcessor.LoadGrayscalePixels(
+                                files[i],
+                                out int w,
+                                out int h);
 
-                        // Run PSO to find optimal thresholds
-                        double[] thresholds = PsoSegmentation.FindThresholds(
-                            pixels, iterations: psoIterations);
+                        //----------------------------------
+                        // PSO Threshold Search
+                        //----------------------------------
 
-                        // Apply thresholds → segmented label image
-                        byte[] segmented = ApplyThresholds(pixels, thresholds);
+                        double[] thresholds =
+                            PsoSegmentation.FindThresholds(
+                                pixels,
+                                psoIterations);
 
-                        // Save segmented image
-                        string destFile = Path.Combine(
-                            destClass, Path.GetFileName(file));
+                        //----------------------------------
+                        // Apply Thresholds
+                        //----------------------------------
 
-                        SaveGrayscale(segmented, w, h, destFile);
-                        saved++;
+                        byte[] segmented =
+                            ApplyThresholds(
+                                pixels,
+                                thresholds);
+
+                        //----------------------------------
+                        // Save
+                        //----------------------------------
+
+                        string outputFile =
+                            Path.Combine(
+                                targetFolder,
+                                Path.GetFileNameWithoutExtension(files[i])
+                                + ".png");
+
+                        ImageProcessor.SaveGrayscale(
+                            segmented,
+                            w,
+                            h,
+                            outputFile);
+
+                        if ((i + 1) % 50 == 0)
+                        {
+                            Console.WriteLine(
+                                $"{className}: {i + 1}/{files.Length}");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"  [WARN] Skipping {file}: {ex.Message}");
+                        Console.WriteLine(
+                            $"[WARN] {files[i]} : {ex.Message}");
                     }
                 }
 
-                Console.WriteLine($"  [{className}] {saved} images segmented.");
+                Console.WriteLine(
+                    $"{className} completed");
             }
 
-            Console.WriteLine("  Segmentation complete.");
+            Console.WriteLine(
+                "\nDataset segmentation completed.");
         }
 
         // =========================
@@ -97,15 +150,15 @@ namespace MedicalSegmentationPSO
             return result;
         }
 
-        // =========================
-        // SAVE GRAYSCALE
-        // =========================
-        // Delegates to ImageProcessor.SaveGrayscale (uses SkiaSharp — MIT licensed)
-        private static void SaveGrayscale(byte[] pixels, int w, int h, string path)
+        public static bool IsSegmentedDatasetReady(string root)
         {
-            // Change extension to .png — lossless format suits segmentation masks
-            string pngPath = System.IO.Path.ChangeExtension(path, ".png");
-            ImageProcessor.SaveGrayscale(pixels, w, h, pngPath);
+            return
+                Directory.Exists(Path.Combine(root, "Training")) &&
+                Directory.Exists(Path.Combine(root, "Testing")) &&
+                Directory.GetFiles(
+                    Path.Combine(root, "Training"),
+                    "*.*",
+                    SearchOption.AllDirectories).Length > 0;
         }
     }
 

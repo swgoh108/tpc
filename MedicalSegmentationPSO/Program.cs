@@ -16,18 +16,35 @@ class Program
 
     static void Main()
     {
+        if (!DatasetSegmentation.IsSegmentedDatasetReady(
+                SegmentedDataset))
+        {
+            Console.WriteLine(
+                "\nSegmented dataset not found.");
+
+            DatasetSegmentation.Process(
+                RawDataset,
+                SegmentedDataset,
+                psoIterations: 50);
+        }
+        else
+        {
+            Console.WriteLine(
+                "\nSegmented dataset already exists.");
+        }
+
         //Console.WriteLine("=== PSO BENCHMARK SYSTEM ===");
         //BenchmarkPSORunner.Run();
 
         //Console.WriteLine("DONE");
 
-        //Console.WriteLine("================================");
-        //Console.WriteLine(" Brain Tumor Classification");
-        //Console.WriteLine("================================");
+        Console.WriteLine("================================");
+        Console.WriteLine(" Brain Tumor Classification");
+        Console.WriteLine("================================");
 
-        ////--------------------------------
-        //// TRAINING DATA
-        ////--------------------------------
+        //--------------------------------
+        // TRAINING DATA
+        //--------------------------------
 
         var trainDataset =
             DatasetLoaderTorch.Load(
