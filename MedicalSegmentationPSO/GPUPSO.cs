@@ -6,10 +6,6 @@ using System.Collections.Generic;
 
 namespace MedicalSegmentationPSO
 {
-    // GPU-accelerated PSO using ILGPU.
-    // Same Otsu 4-class between-class-variance fitness as PSO.cs / MultiCorePSO.cs,
-    // but the per-pixel histogram is built on the GPU.
-    // Buffers are allocated ONCE and reused across all fitness calls.
     public class GPUPSO : IDisposable
     {
         private readonly List<Particle> _swarm;
@@ -49,7 +45,7 @@ namespace MedicalSegmentationPSO
                 _swarm.Add(p);
             }
 
-            // Pick GPU (CUDA) if available, otherwise fall back to CPU.
+            // Pick CUDA if available, else fall back to CPU.
             _context = Context.Create(builder => builder.Cuda());
 
             var cudaDevice = _context.GetCudaDevice(0);
@@ -116,8 +112,6 @@ namespace MedicalSegmentationPSO
             return result;
         }
 
-        // Build the 4-class count/sum on the GPU, finish the variance on CPU.
-        // Reuses the preallocated _counts / _sums buffers.
         private double CalculateFitnessGPU(double[] thresholds)
         {
             double[] sorted = (double[])thresholds.Clone();
@@ -156,7 +150,7 @@ namespace MedicalSegmentationPSO
             return fitness;
         }
 
-        // One GPU thread per pixel; atomically bins into 4 classes.
+        // one GPU thread per pixel
         private static void HistogramKernel(
             Index1D i, ArrayView<byte> pixels,
             int t0, int t1, int t2,

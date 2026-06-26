@@ -55,7 +55,7 @@ namespace MedicalSegmentationPSO
                     })
                     .ToArray();
 
-                // ── update personal & global bests (sequential reduction) ──
+                // update personal & global bests (sequential reduction)
                 foreach (var (p, fitness) in evaluated)
                 {
                     if (fitness > p.BestFitness)
@@ -70,7 +70,7 @@ namespace MedicalSegmentationPSO
                     }
                 }
 
-                // ── velocity & position update ──
+                // velocity & position update
                 foreach (var p in _swarm)
                 {
                     for (int d = 0; d < _dim; d++)
@@ -99,7 +99,7 @@ namespace MedicalSegmentationPSO
             return result;
         }
 
-        // ── Otsu 4-class between-class variance (identical to PSO.cs) ──
+        // Otsu 4 class between class variance
         private double CalculateFitness(double[] thresholds)
         {
             double[] sorted = (double[])thresholds.Clone();
