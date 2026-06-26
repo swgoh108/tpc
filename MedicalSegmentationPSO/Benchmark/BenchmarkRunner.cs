@@ -27,8 +27,8 @@ namespace MedicalSegmentationPSO
                 {
                     new SequentialPSOAdapter(),
                     new MultiCorePSOAdapter(),
-                    //new ParallelPSOAdapter(),
-                    //new GPUPSOAdapter(),
+                    new PLINQPSOAdapter(),
+                    new GPUPSOAdapter(),
                     new SharedMemoryPSOAdapter(),
                 };
 
