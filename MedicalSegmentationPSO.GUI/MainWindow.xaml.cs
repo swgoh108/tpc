@@ -1,4 +1,5 @@
-﻿using System;
+﻿//MainWindow.xaml.cs
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -46,7 +47,8 @@ namespace MedicalSegmentationPSO.GUI
 			string[] modelCandidates =
 			{
 				@"C:\Users\User\source\repos\tpc\BrainTumorCNN.pt",
-				Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BrainTumorCNN.pt"),
+                @"C:\MMU\Degree\Sem 5\TPC\MedicalSegmentationPSO\BrainTumorCNN.pt",
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BrainTumorCNN.pt"),
 				Path.Combine(Directory.GetCurrentDirectory(),      "BrainTumorCNN.pt"),
 			};
 
@@ -389,74 +391,165 @@ namespace MedicalSegmentationPSO.GUI
 			}
 		}
 
-		private async void BtnClassify_Click(object sender, RoutedEventArgs e)
-		{
-			if (currentPixels == null) { MessageBox.Show("Load an image first."); return; }
+        //private async void BtnClassify_Click(object sender, RoutedEventArgs e)
+        //{
+        //	if (currentPixels == null) { MessageBox.Show("Load an image first."); return; }
 
-			SetAllButtonsEnabled(false);
-			ShowProgress("Running CNN classification…");
-			txtClassification.Text = "Classifying…";
+        //	SetAllButtonsEnabled(false);
+        //	ShowProgress("Running CNN classification…");
+        //	txtClassification.Text = "Classifying…";
 
-			try
-			{
-				const int SIZE = 224;
+        //	try
+        //	{
+        //		const int SIZE = 224;
 
-				using var src = new Mat(imgHeight, imgWidth, MatType.CV_8UC1);
-				for (int y = 0; y < imgHeight; y++)
-					for (int x = 0; x < imgWidth; x++)
-						src.Set(y, x, currentPixels[y * imgWidth + x]);
+        //		using var src = new Mat(imgHeight, imgWidth, MatType.CV_8UC1);
+        //		for (int y = 0; y < imgHeight; y++)
+        //			for (int x = 0; x < imgWidth; x++)
+        //				src.Set(y, x, currentPixels[y * imgWidth + x]);
 
-				using var resized = new Mat();
-				Cv2.Resize(src, resized, new OpenCvSharp.Size(SIZE, SIZE));
+        //		using var resized = new Mat();
+        //		Cv2.Resize(src, resized, new OpenCvSharp.Size(SIZE, SIZE));
 
-				byte[] buf = new byte[SIZE * SIZE];
-				Marshal.Copy(resized.Data, buf, 0, buf.Length);
+        //		byte[] buf = new byte[SIZE * SIZE];
+        //		Marshal.Copy(resized.Data, buf, 0, buf.Length);
 
-				float[] data = new float[buf.Length];
-				for (int i = 0; i < buf.Length; i++) data[i] = buf[i] / 255f;
+        //		float[] data = new float[buf.Length];
+        //		for (int i = 0; i < buf.Length; i++) data[i] = buf[i] / 255f;
 
-				var tensor = torch.tensor(data, dtype: ScalarType.Float32)
-								  .reshape(1, 1, SIZE, SIZE);
+        //		var tensor = torch.tensor(data, dtype: ScalarType.Float32)
+        //						  .reshape(1, 1, SIZE, SIZE);
 
-				int predIdx = await Task.Run(() => cnnClassifier.Predict(tensor));
+        //		int predIdx = await Task.Run(() => cnnClassifier.Predict(tensor));
 
-				string label = predIdx >= 0 && predIdx < TumorLabels.Classes.Length
-					? TumorLabels.Classes[predIdx]
-					: $"Class {predIdx}";
+        //		string label = predIdx >= 0 && predIdx < TumorLabels.Classes.Length
+        //			? TumorLabels.Classes[predIdx]
+        //			: $"Class {predIdx}";
 
-				string display = label switch
-				{
-					"glioma" => "🔴 Glioma Detected",
-					"meningioma" => "🟠 Meningioma Detected",
-					"pituitary" => "🟡 Pituitary Tumor Detected",
-					"notumor" => "🟢 No Tumor Detected",
-					_ => label
-				};
+        //		string display = label switch
+        //		{
+        //			"glioma" => "🔴 Glioma Detected",
+        //			"meningioma" => "🟠 Meningioma Detected",
+        //			"pituitary" => "🟡 Pituitary Tumor Detected",
+        //			"notumor" => "🟢 No Tumor Detected",
+        //			_ => label
+        //		};
 
-				txtClassification.Text = $"Prediction: {display}";
+        //		txtClassification.Text = $"Prediction: {display}";
 
-				string modelNote = cnnModelLoaded
-					? "Trained model (BrainTumorCNN.pt)"
-					: "⚠ Untrained model — load BrainTumorCNN.pt for accurate results";
+        //		string modelNote = cnnModelLoaded
+        //			? "Trained model (BrainTumorCNN.pt)"
+        //			: "⚠ Untrained model — load BrainTumorCNN.pt for accurate results";
 
-				txtClassNote.Text =
-					$"{modelNote}  |  Raw label: {label}  |  " +
-					$"Classes: {string.Join(", ", TumorLabels.Classes)}";
-			}
-			catch (Exception ex)
-			{
-				txtClassification.Text = "Prediction: Error";
-				MessageBox.Show($"Classification error:\n{ex.Message}",
-					"Error", MessageBoxButton.OK, MessageBoxImage.Error);
-			}
-			finally
-			{
-				HideProgress();
-				SetAllButtonsEnabled(true);
-			}
-		}
+        //		txtClassNote.Text =
+        //			$"{modelNote}  |  Raw label: {label}  |  " +
+        //			$"Classes: {string.Join(", ", TumorLabels.Classes)}";
+        //	}
+        //	catch (Exception ex)
+        //	{
+        //		txtClassification.Text = "Prediction: Error";
+        //		MessageBox.Show($"Classification error:\n{ex.Message}",
+        //			"Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        //	}
+        //	finally
+        //	{
+        //		HideProgress();
+        //		SetAllButtonsEnabled(true);
+        //	}
+        //}
 
-		private void BtnSaveSegmented_Click(object sender, RoutedEventArgs e)
+        private async void BtnClassify_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentPixels == null)
+            {
+                MessageBox.Show("Load an image first.");
+                return;
+            }
+
+            SetAllButtonsEnabled(false);
+            ShowProgress("Running CNN classification...");
+            txtClassification.Text = "Classifying...";
+
+            try
+            {
+                // Step 1: PSO thresholds (same as DatasetSegmentation.cs)
+                double[] thresholds = await Task.Run(
+                    () => PsoSegmentation.FindThresholds(currentPixels, 50));
+
+                // Step 2: Apply thresholds → 4-level quantized image
+                byte[] segmented = ApplyThresholds(currentPixels, thresholds);
+
+                // Step 3: Display the quantized image directly on imgSegmented (no tumor overlay)
+                lastSegmentedImage = GrayscaleToBitmapSource(segmented, imgWidth, imgHeight);
+                imgSegmented.Source = lastSegmentedImage;
+
+                // Step 4: Resize to 224x224 for CNN input
+                const int SIZE = 224;
+
+                using var src = new Mat(imgHeight, imgWidth, MatType.CV_8UC1);
+                Marshal.Copy(segmented, 0, src.Data, segmented.Length);
+
+                using var resized = new Mat();
+                Cv2.Resize(src, resized, new OpenCvSharp.Size(SIZE, SIZE));
+
+                byte[] resizedPixels = new byte[SIZE * SIZE];
+                Marshal.Copy(resized.Data, resizedPixels, 0, resizedPixels.Length);
+
+                // Step 5: Normalize to float
+                float[] input = new float[SIZE * SIZE];
+                for (int i = 0; i < input.Length; i++)
+                    input[i] = resizedPixels[i] / 255f;
+
+                // Step 6: Predict — tensor lives and dies on the background thread
+                int predIdx = await Task.Run(() =>
+                {
+                    using var tensor = torch.tensor(input, dtype: ScalarType.Float32)
+                                            .reshape(1, 1, SIZE, SIZE);
+                    return cnnClassifier.Predict(tensor);
+                });
+
+                // Step 7: Show result
+                string label = (predIdx >= 0 && predIdx < TumorLabels.Classes.Length)
+                    ? TumorLabels.Classes[predIdx]
+                    : $"Class {predIdx}";
+
+                string display = label switch
+                {
+                    "glioma" => "🔴 Glioma Detected",
+                    "meningioma" => "🟠 Meningioma Detected",
+                    "pituitary" => "🟡 Pituitary Tumor Detected",
+                    "notumor" => "🟢 No Tumor Detected",
+                    _ => label
+                };
+
+                txtClassification.Text = $"Prediction: {display}";
+                txtClassNote.Text =
+                    $"Model: BrainTumorCNN.pt  |  Raw label: {label}  |  " +
+                    $"Thresholds: {thresholds[0]:F1} / {thresholds[1]:F1} / {thresholds[2]:F1}";
+            }
+            catch (Exception ex)
+            {
+                txtClassification.Text = "Prediction: Error";
+                MessageBox.Show(ex.ToString(), "Classification Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                HideProgress();
+                SetAllButtonsEnabled(true);
+            }
+        }
+
+        // Add this helper — converts a flat grayscale byte[] to a BitmapSource
+        private BitmapSource GrayscaleToBitmapSource(byte[] pixels, int width, int height)
+        {
+            var wb = new WriteableBitmap(width, height, 96, 96, PixelFormats.Gray8, null);
+            wb.WritePixels(new Int32Rect(0, 0, width, height), pixels, width, 0);
+            wb.Freeze();
+            return wb;
+        }
+
+        private void BtnSaveSegmented_Click(object sender, RoutedEventArgs e)
 		{
 			if (lastSegmentedImage == null)
 			{
@@ -761,5 +854,27 @@ namespace MedicalSegmentationPSO.GUI
 			txtEfficiency.Text = efficiency;
 			txtTumor.Text = tumor;
 		}
-	}
+
+        private byte[] ApplyThresholds(byte[] pixels, double[] T)
+        {
+            double[] sorted = (double[])T.Clone();
+            Array.Sort(sorted);
+
+            byte[] levels = { 0, 85, 170, 255 };
+
+            byte[] result = new byte[pixels.Length];
+
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                int k =
+                    pixels[i] <= sorted[0] ? 0 :
+                    pixels[i] <= sorted[1] ? 1 :
+                    pixels[i] <= sorted[2] ? 2 : 3;
+
+                result[i] = levels[k];
+            }
+
+            return result;
+        }
+    }
 }

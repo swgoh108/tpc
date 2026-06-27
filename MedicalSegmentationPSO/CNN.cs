@@ -1,4 +1,5 @@
-﻿using System;
+﻿//CNN.cs
+using System;
 using System.Collections.Generic;
 using TorchSharp;
 using TorchSharp.Modules;
