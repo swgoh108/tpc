@@ -1,0 +1,263 @@
+﻿<Window x:Class="MedicalSegmentationPSO.GUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:material="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Medical Segmentation - PSO Engine"
+        Height="750" Width="1250"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent">
+
+	<!-- ===== BACKGROUND ===== -->
+	<Border CornerRadius="18" Background="#0F172A">
+
+		<Grid>
+
+			<Grid.Background>
+				<RadialGradientBrush>
+					<GradientStop Color="#1E293B" Offset="0"/>
+					<GradientStop Color="#0F172A" Offset="1"/>
+				</RadialGradientBrush>
+			</Grid.Background>
+
+			<!-- ===== STYLE SYSTEM ===== -->
+			<Grid.Resources>
+
+				<Style TargetType="Button">
+					<Setter Property="Foreground" Value="White"/>
+					<Setter Property="FontSize" Value="13"/>
+					<Setter Property="Padding" Value="14,8"/>
+					<Setter Property="Cursor" Value="Hand"/>
+					<Setter Property="BorderThickness" Value="0"/>
+					<Setter Property="Background" Value="#334155"/>
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="Button">
+								<Border x:Name="bd"
+                                        Background="{TemplateBinding Background}"
+                                        CornerRadius="12"
+                                        Padding="{TemplateBinding Padding}">
+									<ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+								</Border>
+
+								<ControlTemplate.Triggers>
+									<Trigger Property="IsMouseOver" Value="True">
+										<Setter TargetName="bd" Property="Background" Value="#38BDF8"/>
+										<Setter Property="RenderTransform">
+											<Setter.Value>
+												<ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+											</Setter.Value>
+										</Setter>
+									</Trigger>
+
+									<Trigger Property="IsPressed" Value="True">
+										<Setter TargetName="bd" Property="Background" Value="#0EA5E9"/>
+									</Trigger>
+								</ControlTemplate.Triggers>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Style>
+
+			</Grid.Resources>
+
+			<!-- ===== MAIN CONTENT ===== -->
+			<Grid Margin="18">
+
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+
+				<!-- HEADER BAR -->
+				<Grid Grid.Row="0" Margin="0,0,0,15">
+
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition/>
+						<ColumnDefinition Width="Auto"/>
+					</Grid.ColumnDefinitions>
+
+					<!-- TITLE -->
+					<TextBlock Text="🧠 Medical Segmentation Engine"
+						Foreground="White"
+						FontSize="22"
+						FontWeight="Bold"
+						VerticalAlignment="Center"/>
+
+					<!-- EXIT BUTTON-->
+					<Button Grid.Column="1"
+						Content="✕"
+						Width="42"
+						Height="32"
+						Background="#EF4444"
+						Foreground="White"
+						Click="Close_Click"
+						HorizontalAlignment="Right"
+						VerticalAlignment="Center"
+						Cursor="Hand" FontWeight="Bold"/>
+				</Grid>
+
+				<!-- MAIN DASHBOARD -->
+				<ScrollViewer Grid.Row="1"
+							  VerticalScrollBarVisibility="Hidden"
+                              HorizontalScrollBarVisibility="Disabled">
+
+					<StackPanel>
+
+						<!-- ACTION PANEL -->
+						<Border Background="#1E293B"
+                                CornerRadius="16"
+                                Padding="16"
+                                Margin="0,0,0,15"
+                                Opacity="0.95">
+
+							<StackPanel>
+
+								<Button Content="📂 Load MRI / CT Image"
+                                        Background="#3B82F6"
+                                        FontWeight="Bold"
+                                        Height="42"
+                                        Click="BtnBrowse_Click"/>
+
+								<WrapPanel Margin="0,12,0,0" HorizontalAlignment="Center">
+
+									<Button Content="Sequential PSO" Margin="5" Click="BtnSequential_Click" FontWeight="Bold"/>
+									<Button Content="Multi-Core" Margin="5" Click="BtnMultiCore_Click" FontWeight="Bold"/>
+									<Button Content="PLINQ" Margin="5" Click="BtnPLINQ_Click" FontWeight="Bold"/>
+									<Button Content="Shared Memory" Margin="5" Click="BtnShared_Click" FontWeight="Bold"/>
+									<Button Content="GPU Accel" Margin="5" Click="BtnGPU_Click" FontWeight="Bold"/>
+
+									<Button Content="🚀 Benchmark"
+                                            Background="#10B981"
+                                            Margin="5"
+                                            Click="BtnBenchmark3_Click" FontWeight="Bold"/>
+								</WrapPanel>
+
+							</StackPanel>
+						</Border>
+
+						<!-- IMAGE SECTION -->
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition/>
+								<ColumnDefinition/>
+							</Grid.ColumnDefinitions>
+
+							<!-- ORIGINAL -->
+							<Border Grid.Column="0"
+                                    Background="#111827"
+                                    CornerRadius="16"
+                                    Padding="12"
+                                    Margin="5">
+
+								<StackPanel>
+									<TextBlock Text="Original Scan"
+                                               Foreground="#94A3B8"
+                                               FontWeight="Bold"
+                                               Margin="5"/>
+
+									<Border CornerRadius="12" ClipToBounds="True">
+										<Image x:Name="imgOriginal"
+                                               Height="320"
+                                               Stretch="Uniform"/>
+									</Border>
+								</StackPanel>
+							</Border>
+
+							<!-- SEGMENTED -->
+							<Border Grid.Column="1"
+                                    Background="#111827"
+                                    CornerRadius="16"
+                                    Padding="12"
+                                    Margin="5">
+
+								<StackPanel>
+									<TextBlock Text="PSO Segmentation Output"
+                                               Foreground="#94A3B8"
+                                               FontWeight="Bold"
+                                               Margin="5"/>
+
+									<Border CornerRadius="12" ClipToBounds="True">
+										<Image x:Name="imgSegmented"
+                                               Height="320"
+                                               Stretch="Uniform"/>
+									</Border>
+								</StackPanel>
+							</Border>
+						</Grid>
+
+						<Button Content="💾 Save Segmented Image"
+								Height="40"
+								Background="#10B981"
+								Foreground="White"
+								FontWeight="Bold"
+								Margin="0,0,0,10"
+								Click="BtnSaveSegmented_Click"/>
+
+						<!-- STATUS CARDS -->
+						<Border Background="#1E293B"
+								CornerRadius="16"
+        						Padding="16"
+        						Margin="0,15,0,0">
+
+							<StackPanel>
+
+								<TextBlock Text="📊 Processing Results"
+										   Foreground="White"
+                 						   FontSize="18"
+                 						   FontWeight="Bold"
+                						   Margin="0,0,0,12"/>
+
+								<TextBlock x:Name="txtStatus"
+                   						   Foreground="#CBD5E1"
+                   						   FontSize="15"
+                   						   Margin="0,4"/>
+
+								<TextBlock x:Name="txtTime"
+                   						   Foreground="#60A5FA"
+                   						   FontSize="15"
+                   						   Margin="0,4"
+                   						   FontWeight="SemiBold"/>
+
+								<TextBlock x:Name="txtAvgTime"
+                   						   Foreground="#60A5FA"
+                   						   FontSize="15"
+                   						   Margin="0,4"
+                   						   FontWeight="SemiBold"/>
+
+								<TextBlock x:Name="txtSpeedup"
+                   						   Foreground="#34D399"
+                   						   FontSize="15"
+                   						   Margin="0,4"
+                   						   FontWeight="SemiBold"/>
+
+								<TextBlock x:Name="txtEfficiency"
+                   						   Foreground="#34D399"
+                   						   FontSize="15"
+                   						   Margin="0,4"
+                   						   FontWeight="SemiBold"/>
+
+								<TextBlock x:Name="txtCores"
+                   						   Foreground="#FBBF24"
+                   						   FontSize="15"
+                   						   Margin="0,4"
+                   						   FontWeight="SemiBold"/>
+
+								<TextBlock x:Name="txtTumor"
+                   						   Foreground="#CBD5E1"
+                   						   FontSize="15"
+                   						   Margin="0,8,0,0"/>
+							</StackPanel>
+						</Border>
+
+					</StackPanel>
+
+				</ScrollViewer>
+
+			</Grid>
+
+		</Grid>
+	</Border>
+</Window>
