@@ -132,13 +132,18 @@ namespace MedicalSegmentationPSO
             var dataset =
                 new List<byte[]>();
 
-            foreach (string file in
+			int maxImages = 10;
+			int count = 0;
+
+			foreach (string file in
                      Directory.GetFiles(
                          path,
                          "*.*",
                          SearchOption.AllDirectories))
             {
-                try
+				if (count >= maxImages) break;
+
+				try
                 {
                     var pixels =
                         ImageProcessor
