@@ -578,13 +578,22 @@ namespace MedicalSegmentationPSO.GUI
 
 		private void DisplaySegmentation(double[] thresholds, bool[] brainMask)
 		{
-			byte[] classMap = BuildClassMap(currentPixels!, thresholds);
-			bool[] tumorMask = ExtractTumorMask(classMap, brainMask, imgWidth, imgHeight);
-			lastSegmentedImage = CreateTumorOverlay(currentPixels!, tumorMask, imgWidth, imgHeight);
-			imgSegmented.Source = lastSegmentedImage;
-		}
+            //byte[] classMap = BuildClassMap(currentPixels!, thresholds);
+            //bool[] tumorMask = ExtractTumorMask(classMap, brainMask, imgWidth, imgHeight);
+            //lastSegmentedImage = CreateTumorOverlay(currentPixels!, tumorMask, imgWidth, imgHeight);
+            //imgSegmented.Source = lastSegmentedImage;
 
-		private int CountTumorPixels(byte[] pixels, double[] thresholds, bool[] brainMask)
+            byte[] segmented = ApplyThresholds(currentPixels!, thresholds);
+
+            lastSegmentedImage = GrayscaleToBitmapSource(
+                segmented,
+                imgWidth,
+                imgHeight);
+
+            imgSegmented.Source = lastSegmentedImage;
+        }
+
+        private int CountTumorPixels(byte[] pixels, double[] thresholds, bool[] brainMask)
 		{
 			byte[] classMap = BuildClassMap(pixels, thresholds);
 			bool[] tumorMask = ExtractTumorMask(classMap, brainMask, imgWidth, imgHeight);
